@@ -1,4 +1,4 @@
-﻿
+
 #Install-Module -Name Quamotion.PowerShell
 
 
@@ -343,11 +343,9 @@ $chrome = New-Object OpenQA.Selenium.Chrome.ChromeDriver "$seleniumDir"
 $website1 =  "https://smartdesk.hcl.com"
 
 $chrome.Navigate().GoToUrl($website1);
-
+$chrome.manage().Window.Maximize();
 $Browser = $chrome
-Start-Sleep -seconds 5
-
-$wait = New-TimeSpan -seconds 10
+pause
 
 #Login
 $user = $Browser.FindElements([OpenQA.Selenium.By]::Id('i0116'))
@@ -390,13 +388,21 @@ foreach ($line in $rows)
         $selectedline[0].Click()
         $selectedline[0].Click()
         $pointer = $selectedline[0].Location
+        $pointer
         $X = $pointer.X + 100;
-        [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point($X , $pointer.Y)
-        sleep -Seconds 01
+        $Y = $pointer.Y
+        [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point($X , $Y)
         $SendMouseClick::mouse_event(0x00000002, 0, 0, 0, 0);
         $SendMouseClick::mouse_event(0x00000004, 0, 0, 0, 0);
         $SendMouseClick::mouse_event(0x00000002, 0, 0, 0, 0);
         $SendMouseClick::mouse_event(0x00000004, 0, 0, 0, 0);
+        Start-Sleep -seconds 1
+        $pendingCheckBox = $Browser.FindElements([OpenQA.Selenium.By]::Id('arid_WIN_3_7'))
+        $pendingCheckBox.SendKeys("Pending")
+        $requestCheckBox = $Browser.FindElements([OpenQA.Selenium.By]::Id('arid_WIN_3_1000000881'))
+        $requestCheckBox.SendKeys("Request")
+        $button_SubmitTick = $Browser.FindElements([OpenQA.Selenium.By]::Id('idSIButton9'))
+        if ($button_SubmitTick[0] -ne $null) { $button_SubmitTick[0].Click() } 
         pause
     }
  }
