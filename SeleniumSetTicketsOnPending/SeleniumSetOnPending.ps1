@@ -314,18 +314,20 @@ else {
      }
 
 
-$return = Get-Creds “Please provide login info:” “User email:” “Password:” “Domain:”
 
+
+
+$return = Get-Creds “Please provide login info:” “User email:” “Password:” “Domain:”
 $userS = $return[0]
 $userS
 $passS = $return[1]
-
 $domainS = $return[2]
 
-$seleniumDir = "C:\Program Files\WindowsPowerShell\Modules\Selenium\1.1\assemblies"
 
+$seleniumDir = "C:\Program Files\WindowsPowerShell\Modules\Selenium\1.1\assemblies"
 Add-Type -Path "$seleniumDir\WebDriver.dll"
 Add-Type -Path "$seleniumDir\WebDriver.Support.dll"
+
 $signature=@'
 
       [DllImport("user32.dll",CharSet=CharSet.Auto, CallingConvention=CallingConvention.StdCall)]
@@ -340,38 +342,88 @@ $SendMouseClick = Add-Type  -name "Win32MouseEventNew" -memberDefinition $signat
 
 $chrome = New-Object OpenQA.Selenium.Chrome.ChromeDriver "$seleniumDir"
 
+$chrome.manage().Window.Maximize();
+
 $website1 =  "https://smartdesk.hcl.com"
 
 $chrome.Navigate().GoToUrl($website1);
-$chrome.manage().Window.Maximize();
-$Browser = $chrome
-pause
 
+$Browser = $chrome
+
+[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($Browser,[System.TimeSpan]::FromSeconds(14))
+
+$wait.PollingInterval = 100
+
+
+
+
+try {
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id('i0116')))
+} catch [exception]{
+  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
+}
 #Login
 $user = $Browser.FindElements([OpenQA.Selenium.By]::Id('i0116'))
 $user.SendKeys($userS)
 
+
+try {
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id('idSIButton9')))
+} catch [exception]{
+  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
+}
 $button = $Browser.FindElements([OpenQA.Selenium.By]::Id('idSIButton9'))
-$button.Click()
+if ($button -ne $null) {$button.Click();}
 
 
+
+
+
+try {
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id('idChkBx_PWD_KMSI0Pwd')))
+} catch [exception]{
+  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
+}
 $checkbox = $Browser.FindElements([OpenQA.Selenium.By]::Id('idChkBx_PWD_KMSI0Pwd'))
 if ($checkbox -ne $null) { $checkbox.Click() }
-Start-Sleep -seconds 6
 
+
+
+
+try {
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id('i0118')))
+} catch [exception]{
+  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
+}
 $pass = $Browser.FindElements([OpenQA.Selenium.By]::Id('i0118'))
 $pass.SendKeys($passS)
-$button_Signin = $Browser.FindElements([OpenQA.Selenium.By]::Id('idSIButton9'))
-if ($button_Signin[0] -ne $null) { $button_Signin[0].Click() }
-Start-Sleep -seconds 4
-#$Browser.Manage().Timeouts().ImplicitlyWait( $wait)
 
+
+
+try {
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id('idSIButton9')))
+} catch [exception]{
+  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
+}
+$button_Signin = $Browser.FindElements([OpenQA.Selenium.By]::Id('idSIButton9'))
+$button_Signin[0].Click() 
+
+
+try {
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id('idSIButton9')))
+} catch [exception]{
+  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
+}
 $button_StaySigned = $Browser.FindElements([OpenQA.Selenium.By]::Id('idSIButton9'))
 if ($button_StaySigned[0] -ne $null) { $button_StaySigned[0].Click() } 
 Start-Sleep -seconds 12
 pause
 
-
+try {
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName('BaseTableInner')))
+} catch [exception]{
+  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
+}
 $table = $Browser.FindElements([OpenQA.Selenium.By]::ClassName('BaseTableInner'))
 
 $rows =  $table.FindElements([OpenQA.Selenium.By]::TagName("tr"))
@@ -382,6 +434,7 @@ foreach ($line in $rows)
  {
    if ($line.Text -like "*000*")
     {
+        
         $line.Text
         $line.Click()
         $selectedline = $Browser.FindElements([OpenQA.Selenium.By]::ClassName('SelPrimary'))
@@ -389,22 +442,62 @@ foreach ($line in $rows)
         $selectedline[0].Click()
         $pointer = $selectedline[0].Location
         $pointer
-        $X = $pointer.X + 100;
-        $Y = $pointer.Y
+        $X = $pointer.X + 100; 
+        $Y = $pointer.Y + 120 ;  ## deducting chrome favourites bar
         [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point($X , $Y)
         $SendMouseClick::mouse_event(0x00000002, 0, 0, 0, 0);
         $SendMouseClick::mouse_event(0x00000004, 0, 0, 0, 0);
         $SendMouseClick::mouse_event(0x00000002, 0, 0, 0, 0);
         $SendMouseClick::mouse_event(0x00000004, 0, 0, 0, 0);
-        Start-Sleep -seconds 1
-        $pendingCheckBox = $Browser.FindElements([OpenQA.Selenium.By]::Id('arid_WIN_3_7'))
-        $pendingCheckBox.SendKeys("Pending")
-        $requestCheckBox = $Browser.FindElements([OpenQA.Selenium.By]::Id('arid_WIN_3_1000000881'))
-        $requestCheckBox.SendKeys("Request")
-        $button_SubmitTick = $Browser.FindElements([OpenQA.Selenium.By]::Id('idSIButton9'))
-        if ($button_SubmitTick[0] -ne $null) { $button_SubmitTick[0].Click() } 
-        pause
+        
+        Start-Sleep -Seconds 16 ;
+        
+        try 
+        {
+        [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Xpath('//*[@id="WIN_3_7"]/div')))
+        } 
+        catch [exception]
+        {
+        Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
+        }
+        $pendingCheckBox = $Browser.FindElements([OpenQA.Selenium.By]::Xpath('//*[@id="WIN_3_7"]/div')) 
+        $pendingCheckBox.Click()
+        $pendingTable = $Browser.FindElements([OpenQA.Selenium.By]::ClassName('MenuTable'))
+        $rowsPending =  $pendingTable.FindElements([OpenQA.Selenium.By]::TagName("tr"))
+        $pendingVal = $rowsPending[3]
+        $pendingVal.Click()       
+           
+        Start-Sleep -Seconds 2
+        try 
+        {
+        [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Xpath('//*[@id="WIN_3_1000000881"]')))
+        } 
+        catch [exception]
+        {
+        Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
+        }
+        $statusReasonCheckBox = $Browser.FindElements([OpenQA.Selenium.By]::Xpath('//*[@id="WIN_3_1000000881"]')) 
+        $statusReasonCheckBox.Click()
+
+        Start-Sleep -Seconds 2
+
+        $statusReasonTable = $Browser.FindElements([OpenQA.Selenium.By]::ClassName('MenuTable'))
+        $rowsStatusReason =  $statusReasonTable.FindElements([OpenQA.Selenium.By]::TagName("tr"))
+        $statusVal = $rowsStatusReason[14]
+        $statusVal.Click()
+
+        Start-Sleep -Seconds 2
+
+
+        $button_Save = $Browser.FindElements([OpenQA.Selenium.By]::Id('WIN_3_301614800'))
+        if ($button_Save[0] -ne $null) { $button_Save[0].Click() } 
+        
+        Start-Sleep -Seconds 2
+                
+                #//*[@id="WIN_0_304248710"]/fieldset/div/dl/dd[3]/span[2]/a
+        $IThome = $Browser.FindElements([OpenQA.Selenium.By]::Xpath('//*[@id="WIN_0_304248710"]/fieldset/div/dl/dd[3]/span[2]/a'))
+        $IThome[0].Click()
+        Start-Sleep -Seconds 2
     }
  }
 
- OpenQA.Sel
